@@ -1,7 +1,8 @@
 # Check the total amount in the wallet.
-BUILDERS_ADDR=$(bitcoin-cli -regtest  getnewaddress)
-# echo "Generating coins to address: $BUILDERS_ADDR"
-bitcoin-cli -regtest generatetoaddress 1 "$BUILDERS_ADDR"
-sleep 60
+#!/bin/bash
+
+ADDR=$(bitcoin-cli -regtest getnewaddress)
+
+bitcoin-cli -regtest generatetoaddress 1 "$ADDR" > /dev/null
 
 bitcoin-cli -regtest getbalance
