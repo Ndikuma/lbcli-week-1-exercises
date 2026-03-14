@@ -1,2 +1,2 @@
 # Generate a Taproot address.
-bitcoin-cli getnewaddress "builderswallet-taproot" "bech32m"
+bitcoin-cli -regtest getnewaddress "builderswallet-taproot" "bech32m"
