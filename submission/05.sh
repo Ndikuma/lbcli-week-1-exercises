@@ -1,6 +1,6 @@
 # Check the total amount in the wallet.
-# Load the wallet (ignore warning if already loaded)
-bitcoin-cli -regtest loadwallet "builderswallet" 2>/dev/null > /dev/null
+BUILDERS_ADDR=$(bitcoin-cli -regtest -rpcwallet="builderswallet" getnewaddress)
+# echo "Generating coins to address: $BUILDERS_ADDR"
+bitcoin-cli -regtest generatetoaddress 1 "$BUILDERS_ADDR"
 
-# Get the wallet balance and output just the number
-bitcoin-cli -regtest -rpcwallet="builderswallet" getbalance
+bitcoin-cli -regtest getbalance
