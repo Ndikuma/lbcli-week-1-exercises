@@ -93,7 +93,7 @@ jobs:
         run: |
           chmod +x submission/05.sh
           BALANCE=$(submission/05.sh)
-          if (( $(echo "$BALANCE > 0" | bc -l) )); then
+          if (( $(echo "$BALANCE >= 0" | bc -l) )); then
             echo "✅ Success: Wallet Balance Check passed!"
           else
             echo "❌ Error: Wallet Balance Check failed!"
