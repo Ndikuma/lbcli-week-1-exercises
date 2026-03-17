@@ -180,10 +180,19 @@ check_cmd "Getting address info"
 # STUDENT TASK: Extract the internal key (the x-only pubkey) from the descriptor
 # WRITE YOUR SOLUTION BELOW:
 # For taproot addresses, Bitcoin Core returns "internal_key" (x-only pubkey)
-INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key":[[:space:]]*"\([^"]*\)".*/\1/p')
+INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 if [[ -z "$INTERNAL_KEY" ]]; then
   # Fallback for older output formats
-  INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey":[[:space:]]*"\([^"]*\)".*/\1/p')
+  INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+fi
+# If internal_key is still empty, extract it from the descriptor
+if [[ -z "$INTERNAL_KEY" ]]; then
+  DESC_FROM_ADDR=$(echo "$ADDR_INFO" | sed -n 's/.*"desc"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+  DESC_FROM_ADDR=$(trim "$DESC_FROM_ADDR")
+  if [[ -n "$DESC_FROM_ADDR" ]]; then
+    DESC_NOCHK="${DESC_FROM_ADDR%%#*}"
+    INTERNAL_KEY=$(echo "$DESC_NOCHK" | sed -n 's/^tr(\([^,)]*\).*/\1/p')
+  fi
 fi
 check_cmd "Extracting key from descriptor"
 INTERNAL_KEY=$(trim "$INTERNAL_KEY")
