@@ -180,10 +180,10 @@ check_cmd "Getting address info"
 # STUDENT TASK: Extract the internal key (the x-only pubkey) from the descriptor
 # WRITE YOUR SOLUTION BELOW:
 # For taproot addresses, Bitcoin Core returns "internal_key" (x-only pubkey)
-INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key":"\([^"]*\)".*/\1/p')
+INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key":[[:space:]]*"\([^"]*\)".*/\1/p')
 if [[ -z "$INTERNAL_KEY" ]]; then
   # Fallback for older output formats
-  INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey":"\([^"]*\)".*/\1/p')
+  INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey":[[:space:]]*"\([^"]*\)".*/\1/p')
 fi
 check_cmd "Extracting key from descriptor"
 INTERNAL_KEY=$(trim "$INTERNAL_KEY")
