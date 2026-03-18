@@ -159,6 +159,90 @@ else
   exit 1
 fi
 
+# # CHALLENGE PART 7: Working with descriptors to find the final treasure
+# echo ""
+# echo "CHALLENGE 7: The descriptor treasure map"
+# echo "-------------------------------------"
+# echo "The final treasure is locked with an address derived from a descriptor."
+# echo "Create a descriptor for your taproot address and derive the address to ensure it matches."
+
+# # STUDENT TASK: Create a new taproot address
+# # WRITE YOUR SOLUTION BELOW:
+# NEW_TAPROOT_ADDR=$(bitcoin-cli -regtest -rpcwallet="btrustwallet" getnewaddress "taproot" "bech32m")
+# check_cmd "New taproot address generation"
+# NEW_TAPROOT_ADDR=$(trim "$NEW_TAPROOT_ADDR")
+
+# # STUDENT TASK: Get the address info to extract the internal key
+# # WRITE YOUR SOLUTION BELOW:
+# ADDR_INFO=$(bitcoin-cli -regtest -rpcwallet="btrustwallet" getaddressinfo "$NEW_TAPROOT_ADDR")
+# check_cmd "Getting address info"
+
+# # STUDENT TASK: Extract the internal key (the x-only pubkey) from the descriptor
+# # WRITE YOUR SOLUTION BELOW:
+# # For taproot addresses, Bitcoin Core returns "internal_key" (x-only pubkey)
+# INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+# if [[ -z "$INTERNAL_KEY" ]]; then
+#   # Fallback for older output formats
+#   INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+# fi
+# # If internal_key is still empty, extract it from the descriptor
+# if [[ -z "$INTERNAL_KEY" ]]; then
+#   DESC_FROM_ADDR=$(echo "$ADDR_INFO" | sed -n 's/.*"desc"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+#   DESC_FROM_ADDR=$(trim "$DESC_FROM_ADDR")
+#   if [[ -n "$DESC_FROM_ADDR" ]]; then
+#     DESC_NOCHK="${DESC_FROM_ADDR%%#*}"
+#     INTERNAL_KEY=$(echo "$DESC_NOCHK" | sed -n 's/^tr(\([^,)]*\).*/\1/p')
+#   fi
+# fi
+# check_cmd "Extracting key from descriptor"
+# INTERNAL_KEY=$(trim "$INTERNAL_KEY")
+
+# # STUDENT TASK: Create a proper descriptor with just the key
+# # WRITE YOUR SOLUTION BELOW:
+# echo "Using internal key: $INTERNAL_KEY"
+# SIMPLE_DESCRIPTOR="tr($INTERNAL_KEY)"
+# echo "Simple descriptor: $SIMPLE_DESCRIPTOR"
+
+# # STUDENT TASK: Get a proper descriptor with checksum
+# # WRITE YOUR SOLUTION BELOW:
+# TAPROOT_DESCRIPTOR=$(bitcoin-cli -regtest getdescriptorinfo "$SIMPLE_DESCRIPTOR" | sed -n 's/.*"descriptor":"\([^"]*\)".*/\1/p')
+# check_cmd "Descriptor generation"
+# TAPROOT_DESCRIPTOR=$(trim "$TAPROOT_DESCRIPTOR")
+# echo "Taproot treasure map: $TAPROOT_DESCRIPTOR"
+
+# # STUDENT TASK: Derive an address from the descriptor
+# # WRITE YOUR SOLUTION BELOW:
+# DERIVED_ADDR_RAW=$(bitcoin-cli -regtest deriveaddresses "$TAPROOT_DESCRIPTOR")
+# check_cmd "Address derivation"
+# DERIVED_ADDR=$(echo "$DERIVED_ADDR_RAW" | tr -d '[]" \n\t')
+# echo "Derived quantum vault address: $DERIVED_ADDR"
+
+# # Verify the addresses match
+# echo "New taproot address: $NEW_TAPROOT_ADDR"
+# echo "Derived address:     $DERIVED_ADDR"
+
+# # Debug output to help diagnose any issues
+# echo "Address lengths: ${#NEW_TAPROOT_ADDR} vs ${#DERIVED_ADDR}"
+# echo "Address comparison (base64 encoded to see any hidden characters):"
+# echo "New:     $(echo -n "$NEW_TAPROOT_ADDR" | base64)"
+# echo "Derived: $(echo -n "$DERIVED_ADDR" | base64)"
+
+# if [[ "$NEW_TAPROOT_ADDR" == "$DERIVED_ADDR" ]]; then
+#   echo "Addresses match! The final treasure is yours!"
+  
+#   # For educational purposes, show both addresses from the challenge
+#   echo ""
+#   echo "Note: In Bitcoin Core v28, the original taproot address used in the challenge was:"
+#   echo "Original address: $TAPROOT_ADDR"
+#   echo "This wasn't used in our final verification to ensure consistency with v28."
+# else
+#   echo "ERROR: Address mismatch detected! The derived address does not match the taproot address."
+#   echo "This indicates an issue with the descriptor derivation process."
+#   echo "New taproot address: $NEW_TAPROOT_ADDR"
+#   echo "Derived address:     $DERIVED_ADDR"
+#   exit 1
+# fi
+
 # CHALLENGE PART 7: Working with descriptors to find the final treasure
 echo ""
 echo "CHALLENGE 7: The descriptor treasure map"
@@ -177,42 +261,24 @@ NEW_TAPROOT_ADDR=$(trim "$NEW_TAPROOT_ADDR")
 ADDR_INFO=$(bitcoin-cli -regtest -rpcwallet="btrustwallet" getaddressinfo "$NEW_TAPROOT_ADDR")
 check_cmd "Getting address info"
 
-# STUDENT TASK: Extract the internal key (the x-only pubkey) from the descriptor
-# WRITE YOUR SOLUTION BELOW:
-# For taproot addresses, Bitcoin Core returns "internal_key" (x-only pubkey)
-INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"internal_key"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-if [[ -z "$INTERNAL_KEY" ]]; then
-  # Fallback for older output formats
-  INTERNAL_KEY=$(echo "$ADDR_INFO" | sed -n 's/.*"pubkey"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-fi
-# If internal_key is still empty, extract it from the descriptor
-if [[ -z "$INTERNAL_KEY" ]]; then
-  DESC_FROM_ADDR=$(echo "$ADDR_INFO" | sed -n 's/.*"desc"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
-  DESC_FROM_ADDR=$(trim "$DESC_FROM_ADDR")
-  if [[ -n "$DESC_FROM_ADDR" ]]; then
-    DESC_NOCHK="${DESC_FROM_ADDR%%#*}"
-    INTERNAL_KEY=$(echo "$DESC_NOCHK" | sed -n 's/^tr(\([^,)]*\).*/\1/p')
-  fi
-fi
-check_cmd "Extracting key from descriptor"
-INTERNAL_KEY=$(trim "$INTERNAL_KEY")
+# Extract the descriptor from the address info
+DESC_FROM_ADDR=$(echo "$ADDR_INFO" | sed -n 's/.*"desc"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+DESC_FROM_ADDR=$(trim "$DESC_FROM_ADDR")
+echo "Original descriptor: $DESC_FROM_ADDR"
 
-# STUDENT TASK: Create a proper descriptor with just the key
+# STUDENT TASK: Get the descriptor info to verify it's valid
 # WRITE YOUR SOLUTION BELOW:
-echo "Using internal key: $INTERNAL_KEY"
-SIMPLE_DESCRIPTOR="tr($INTERNAL_KEY)"
-echo "Simple descriptor: $SIMPLE_DESCRIPTOR"
+DESCRIPTOR_INFO=$(bitcoin-cli -regtest getdescriptorinfo "$DESC_FROM_ADDR")
+check_cmd "Descriptor info retrieval"
 
-# STUDENT TASK: Get a proper descriptor with checksum
-# WRITE YOUR SOLUTION BELOW:
-TAPROOT_DESCRIPTOR=$(bitcoin-cli -regtest getdescriptorinfo "$SIMPLE_DESCRIPTOR" | sed -n 's/.*"descriptor":"\([^"]*\)".*/\1/p')
-check_cmd "Descriptor generation"
-TAPROOT_DESCRIPTOR=$(trim "$TAPROOT_DESCRIPTOR")
-echo "Taproot treasure map: $TAPROOT_DESCRIPTOR"
+# Extract the checksummed descriptor
+CHECKSUMMED_DESCRIPTOR=$(echo "$DESCRIPTOR_INFO" | sed -n 's/.*"descriptor"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+CHECKSUMMED_DESCRIPTOR=$(trim "$CHECKSUMMED_DESCRIPTOR")
+echo "Taproot treasure map: $CHECKSUMMED_DESCRIPTOR"
 
 # STUDENT TASK: Derive an address from the descriptor
 # WRITE YOUR SOLUTION BELOW:
-DERIVED_ADDR_RAW=$(bitcoin-cli -regtest deriveaddresses "$TAPROOT_DESCRIPTOR")
+DERIVED_ADDR_RAW=$(bitcoin-cli -regtest deriveaddresses "$CHECKSUMMED_DESCRIPTOR")
 check_cmd "Address derivation"
 DERIVED_ADDR=$(echo "$DERIVED_ADDR_RAW" | tr -d '[]" \n\t')
 echo "Derived quantum vault address: $DERIVED_ADDR"
